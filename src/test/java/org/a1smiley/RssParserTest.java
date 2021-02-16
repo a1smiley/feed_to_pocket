@@ -7,9 +7,12 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.Iterator;
 import java.util.Set;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.Test;
 
 class RssParserTest {
+  private static MockWebServer mockServer = new MockWebServer();
 
   @Test
   void shouldCreateInstance() {
@@ -19,8 +22,12 @@ class RssParserTest {
 
   @Test
   void shouldAddNewFeed() throws RssParserException {
-    String feedUrl = "https://www.nasa.gov/rss/dyn/shuttle_station.rss";
+    mockServer.enqueue(new MockResponse()
+        .addHeader("Content-Type", "application/xml; charset=utf-8")
+        .setBody(RssParserTest.class.getClassLoader().getResource("sample_rss.xml").toString())
+        .setResponseCode(200));
 
+    String feedUrl = mockServer.url("/").toString();
     RssParser test = new RssParser();
     test.loadFeed(feedUrl);
     Set<String> loadedFeeds = test.getAllFeeds();
@@ -39,4 +46,6 @@ class RssParserTest {
       test.loadFeed(badUrl);
     });
   }
+
+
 }
